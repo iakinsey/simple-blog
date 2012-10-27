@@ -17,11 +17,20 @@
             (label "password" "Password: ")
             (text-field "password" password))
 
+(defpartial userAddForm
+            [{:keys [username password verify]}]
+            (userLogin)
+            (label "verify" "Verify Password: ")
+            (text-field "verify" password))
+
 (defpartial userLoginForm
             [user]
             (form-to [:post "/login"]
                      (userLogin user)
                      (submit-button "Login")))
 
-(defpage [:get "/login"] {:as user}
+(defpage [:get "/user/login"] {:as user}
          (userLoginForm user))
+
+(defpage [:get "/user/new"] {:as user}
+         (userAddForm user))

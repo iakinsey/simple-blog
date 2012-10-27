@@ -27,6 +27,10 @@
   ; This represents the user
   (if (valid-credentials? username password)
     (do
-      (session/put! username))
-    ;else
-    (str password username)))
+      (session/put! username))))
+
+(defn add-user!
+  "Adds user to the database"
+  [username password]
+  ; TODO encrypt passwords
+  (mgcol/insert "users" {:username username :password password}))
