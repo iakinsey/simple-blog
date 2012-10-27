@@ -29,8 +29,12 @@
     (do
       (session/put! username))))
 
-(defn add-user!
+(defn add-user?
   "Adds user to the database"
   [username password]
   ; TODO encrypt passwords
-  (mgcol/insert "users" {:username username :password password}))
+  (if (user-exists? username)
+    (do
+      (mgcol/insert "users" {:username username :password password})
+      true)
+    false))

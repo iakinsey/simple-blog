@@ -7,12 +7,15 @@
         [simple-blog.models.post]))
 
 (defpage [:post "/user/login"] {:keys [username password]}
+         (login! username password)
          (html5
-           (login! username password)))
+           (str "login success")))
 
 (defpage [:post "/user/new" ] {:keys [username password verify]}
-         (if (= verify password)
-           (add-user! username)))
+         (if (and (= verify password)
+                  (add-user? username password))
+           (str "Hooray!")
+           (str "Invalid password.")))
 
 (defpartial userLogin
             [{:keys [username password]}]
@@ -23,7 +26,7 @@
 
 (defpartial userAdd
             [{:keys [username password verify]}]
-            (userLogin)
+            (userLogin [username password])
             (label "verify" "Verify Password: ")
             (text-field "verify" password))
 
