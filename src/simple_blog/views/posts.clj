@@ -7,6 +7,17 @@
         [hiccup.form]
         [simple-blog.models.post]))
 
+;==============================================================================
+;Pages
+;==============================================================================
+
+;------------------------------------------------------------------------------
+; Success/failure messages
+;
+;   User Login
+;   User Creation
+;------------------------------------------------------------------------------
+
 (defpage [:get "/user/new/failure"] []
          (html5
            [:p "Failed to create a new user."]))
@@ -23,6 +34,31 @@
          (html5
            [:p "Login failure."]))
 
+;------------------------------------------------------------------------------
+; Interactive pages (forms)
+; 
+;   User Login
+;   User Creation
+;------------------------------------------------------------------------------
+
+(defpage [:get "/user/login"] {:as user}
+         (userLoginForm user))
+
+(defpage [:get "/user/new"] {:as user}
+         (userAddForm user))
+
+
+;==============================================================================
+; POST functions
+;==============================================================================
+
+;------------------------------------------------------------------------------
+; Auth
+;
+;   User Login
+;   User Creation
+;------------------------------------------------------------------------------
+
 (defpage [:post "/user/login"] {:keys [username password]}
          (login! username password)
          (resp/redirect "/user/login/success"))
@@ -35,6 +71,13 @@
             (resp/redirect "/user/new/success"))
            (resp/redirect "/user/new/failure")))
 
+;==============================================================================
+; Form structures
+;
+;   User Login
+;   User Creation
+;==============================================================================
+;
 (defpartial userLogin
             [{:keys [username password]}]
             (label "username" "Username: ")
@@ -47,6 +90,15 @@
             (userLogin [username password])
             (label "verify" "Verify Password: ")
             (text-field "verify" password))
+
+
+;==============================================================================
+; Partial forms
+; 
+;   User Login
+;   User Creation
+;==============================================================================
+
 (defpartial userLoginForm
             [user]
             (form-to [:post "/user/login"]
@@ -59,8 +111,3 @@
                      (userAdd user)
                      (submit-button "Create account")))
 
-(defpage [:get "/user/login"] {:as user}
-         (userLoginForm user))
-
-(defpage [:get "/user/new"] {:as user}
-         (userAddForm user))
