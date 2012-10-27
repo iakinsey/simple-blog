@@ -6,9 +6,13 @@
         [hiccup.form]
         [simple-blog.models.post]))
 
-(defpage [:post "/login"] {:keys [username password]}
+(defpage [:post "/user/login"] {:keys [username password]}
          (html5
            (login! username password)))
+
+(defpage [:post "/user/new" ] {:keys [username password verify]}
+         (if (= verify password)
+           (add-user! username)))
 
 (defpartial userLogin
             [{:keys [username password]}]
@@ -17,7 +21,7 @@
             (label "password" "Password: ")
             (text-field "password" password))
 
-(defpartial userAddForm
+(defpartial userAdd
             [{:keys [username password verify]}]
             (userLogin)
             (label "verify" "Verify Password: ")
@@ -25,9 +29,15 @@
 
 (defpartial userLoginForm
             [user]
-            (form-to [:post "/login"]
+            (form-to [:post "/user/login"]
                      (userLogin user)
                      (submit-button "Login")))
+
+(defpartial userAddForm
+            [user]
+            (form-to [:post "/user/new"]
+                     (userAdd user)
+                     (submit-button "Create account")))
 
 (defpage [:get "/user/login"] {:as user}
          (userLoginForm user))
