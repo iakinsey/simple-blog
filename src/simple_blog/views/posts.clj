@@ -47,13 +47,15 @@
 ; Blog posts
 ;------------------------------------------------------------------------------
 
-(defpartial blogPosts
-            [title body username timestamp]
+
+(defpartial blogPost
+            [object]
             (html5
-              [:p title]
-              [:p username]
-              [:p timestamp]
-              [:p body]))
+              [:p (object :title)]
+              [:p (object :body)]
+              [:p (object :username)]
+              [:p (object :timestamp)]
+              [:br]))
 
 ;------------------------------------------------------------------------------
 ;   User Login
@@ -86,7 +88,11 @@
 ; Success/failure messages
 ;
 ;   Generic notifications.
-;------------------------------------------------------------------------------
+;------------------------d------------------------------------------------------
+
+(defn paginated_view
+  [page_num page_length]
+  (map blogPost (get-pages page_num page_length)))
 
 (defn notify
   "Gives the user a notification"
@@ -117,7 +123,13 @@
 ;   Comments
 ;------------------------------------------------------------------------------
 
-(defpage [:get "/"] [])
+(def PER_PAGE 10)
+
+(defpage [:get "/"] []
+         (paginated_view 1 PER_PAGE))
+
+(defpage [:get "/blog/:page_num"] {:keys [page_num]}
+         (paginated_view page_num PER_PAGE))
 
 ;==============================================================================
 ; POST functions

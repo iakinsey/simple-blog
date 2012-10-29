@@ -1,8 +1,8 @@
-(ns simple-blog.models.post
-  (:refer-clojure :exclude [sort find])
-  (:use [monger.collection :only [find-maps insert] :as mgcol]
-        [monger.query :only [with-collection find fields paginate] :as mq])
-  (:require [noir.session :as session]))
+  (ns simple-blog.models.post
+    (:refer-clojure :exclude [sort find])
+    (:use [monger.collection :only [find-maps insert] :as mgcol]
+          [monger.query :only [with-collection find fields paginate] :as mq])
+    (:require [noir.session :as session]))
 
 (defn current-user []
   (session/get :username))
@@ -53,7 +53,7 @@
                          :username (current-user)
                          :timestamp (java.util.Date.)}))
 
-(defn get-page
+(defn get-pages
   [page_num length]
   (mq/with-collection "posts"
                    (mq/find {})
