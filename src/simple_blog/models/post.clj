@@ -1,6 +1,11 @@
 (ns simple-blog.models.post
-  (:use [monger.collection :as mgcol])
+  (:refer-clojure :exclude [sort find])
+  (:use [monger.collection :only [find-maps insert] :as mgcol]
+        [monger.query :only [with-collection find fields paginate] :as mq])
   (:require [noir.session :as session]))
+
+(defn current-user []
+  (session/get :username))
 
 (defn get-user
   [username]
@@ -24,20 +29,33 @@
         ;Is the password valid?
         ;TODO encrypt passwords
         (= ((get-user username) :password) password))
-    (true)))
+    true
+    false))
 
-(defn login! 
+(defn login!
   "Logs user into session"
   [username password]
-  ; This represents the user
+  ; Redundant valid-credential checking.
   (if (valid-credentials? username password)
-    (do
-      (session/put! username))))
+      (session/put! :username username)))
 
 (defn add-user?
   "Adds user to the database"
   [username password]
   ; TODO encrypt passwords
-  (do 
     (mgcol/insert "users" {:username username :password password})
-    true))
+    true)
+
+(defn add-post!
+  [title body]
+  (mgcol/insert "posts" {:title title
+                         :body body 
+                         :username (current-user)
+                         :timestamp (java.util.Date.)}))
+
+(defn get-page
+  [page_num length]
+  (mq/with-collection "posts"
+                   (mq/find {})
+                   (mq/fields [:title :body :username :timestamp])
+                   (mq/paginate :page page_num :per-page length)))
