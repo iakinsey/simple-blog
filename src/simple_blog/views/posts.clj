@@ -6,6 +6,7 @@
         [hiccup.core]
         [hiccup.page]
         [hiccup.form]
+        [hiccup.element]
         [simple-blog.models.post]))
 
 ;==============================================================================
@@ -25,6 +26,8 @@
 
 ;------------------------------------------------------------------------------
 ; User Auth
+;
+; (There could be a macro here at some point.)
 ;------------------------------------------------------------------------------
 
 (defpartial userLogin [{:keys [username password]}]
@@ -47,6 +50,18 @@
             (label "body" "Body: ")
             (text-area "body" body))
 
+(defpartial commentAdd [{:keys [id title name email body]}]
+            ^{:doc "Structure for a newcomment form."}
+            (label "title" "Title :")
+            (text-field "title" title)
+            (label "name" "Name: ")
+            (text-field "name" name)
+            (label "email" "Email: ")
+            (text-field "email" email)
+            (label "body" "Body: ")
+            (text-area "body" body)
+            (hidden-field "id" id))
+
 ;==============================================================================
 ; Partials
 ;==============================================================================
@@ -55,16 +70,32 @@
 ; Blog posts
 ;------------------------------------------------------------------------------
 
-
-(defpartial blogPost
+(defpartial render-post
             [object]
-            ^{:doc "User login page"}
+            ^{:doc "Renders blog post."}
             (html5
+              (link-to (post-permalink (object :year)
+                                       (object :month)
+                                       (object :slug)))
               [:p (object :title)]
               [:p (object :body)]
               [:p (object :username)]
               [:p (object :timestamp)]
               [:br]))
+
+(defpartial render-comment
+            [object]
+            ^{:doc "Renders a single comment"}
+            (html5
+              [:p  (object :title)]
+              [:p "By: " (object :name)]
+              [:p "At: " (object :timestamp)]
+              [:p (object :body)]))
+
+(defpartial render-comments
+            [object]
+            ^{:doc "Renders comments for blog post."}
+            (map render-comment (object :comments)))
 
 ;------------------------------------------------------------------------------
 ;   User Login
@@ -72,24 +103,31 @@
 ;------------------------------------------------------------------------------
 
 (defpartial userLoginForm
-            ^{:doc "Complete html user login form."}
             [user]
+            ^{:doc "Complete html user login form."}
             (form-to [:post "/user/login"]
                      (userLogin user)
                      (submit-button "Login")))
 
 (defpartial userAddForm
-            ^{:doc "Complete html user add form."}
             [user]
+            ^{:doc "Complete html user add form."}
             (form-to [:post "/user/new"]
                      (userAdd user)
                      (submit-button "Create account")))
 
 (defpartial postAddForm
-            ^{:doc "Complete html post add form."}
             [user]
+            ^{:doc "Complete html post add form."}
             (form-to [:post "/post/new"]
                      (postAdd user)
+                     (submit-button "Add post")))
+
+(defpartial commentAddForm 
+            [object id]
+            ^{:doc "Complete new comment form."}
+            (form-to [:post "/comment/new"]
+                     (commentAdd object)
                      (submit-button "Add post")))
 
 ;==============================================================================
@@ -103,13 +141,13 @@
 ;------------------------------------------------------------------------------
 
 (defn paginated_view
-  ^{:doc "Paginated list of blog posts"}
   [page_num page_length]
-  (map blogPost (get-pages page_num page_length)))
+  ^{:doc "Paginated list of blog posts"}
+  (map render-post (get-pages page_num page_length)))
 
 (defn notify
-  ^{:doc "Gives the user a notification."}
   [message]
+  ^{:doc "Gives the user a notification."}
   (html5
     [:p message]))
 
@@ -148,6 +186,15 @@
          ^{:doc "Blog post listing."}
          (paginated_view page_num PER_PAGE))
 
+(defpage [:get "/:year/:month/:slug"] {:keys [year month slug]}
+         ^{:doc "Individual blog post"}
+         (let [post_object (get-post year month slug)]
+           ((juxt (render-post)
+                  (commentAddForm)
+                  (render-comments))
+              post_object)))
+         
+
 ;==============================================================================
 ; POST functions
 ;==============================================================================
@@ -160,6 +207,7 @@
 ;------------------------------------------------------------------------------
 
 (defpage [:post "/user/login"] {:keys [username password]}
+         ^{:doc "Logs user in."}
          (if (valid-credentials? username password)
          ^{:doc "Logs the user in."}
            (do
@@ -168,8 +216,8 @@
            (notify "Login failed!")))
 
 (defpage [:post "/user/new"] {:keys [username password verify]}
-         (if (and (= verify password)
          ^{:doc "Adds a new user."}
+         (if (and (= verify password)
                   (user-available? username))
            (do
             (add-user? username password)
@@ -180,4 +228,10 @@
          ^{:doc "Adds a new post."}
          (do
           (add-post! title body)
-           (notify "New post created successfully.")))
+          (notify "New post created successfully.")))
+
+(defpage [:post "/:year/:month/:slug/comment/add"]
+         {:keys [id title name email body]}
+         (do
+           (add-comment! id title name email body)
+           (notify "Comment created successfully.")))
