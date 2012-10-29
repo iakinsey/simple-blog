@@ -96,6 +96,7 @@
 
 (defn get-post
   [year month slug]
+  ^{:doc "Gets post from query items."}
   (mgcol/find "posts" {:year year :month month :slug slug}))
 
 
@@ -106,6 +107,7 @@
 
 (defn add-comment!
   [id title name email body]
+  ^{:doc "Adds comment to a post."}
   (mgcol/update "posts" {:_id id} 
                 {:comments {:title title
                             :name name
