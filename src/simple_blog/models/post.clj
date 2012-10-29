@@ -5,23 +5,27 @@
     (:require [noir.session :as session]))
 
 (defn current-user []
+  ^{:doc "Gets the user currently logged in."}
   (session/get :username))
 
 (defn get-user
+  ^{:doc "Retrieves user information from the database."}
   [username]
   (first (mgcol/find-maps "users" {:username username})))
 
 (defn user-available?
-  "Checks if user can be added. Effectively the opposite of (user-exists?)."
+  ^{:doc "Checks if user can be added. Effectively the opposite of
+         (user-exists?)."}
   [username]
   (= (get-user username) nil))
 
 (defn user-exists?
+  ^{:doc "Checks if user exists in the database"}
   [username]
-  "Checks if user exists in the database"
   (not (user-available? username)))
 
 (defn valid-credentials?
+  ^{:doc "Checks to see if user credentials are valid."}
   [username password]
   (if (and
         ;Does the user exist?
@@ -33,20 +37,21 @@
     false))
 
 (defn login!
-  "Logs user into session"
+  ^{:doc "Logs user into session"}
   [username password]
   ; Redundant valid-credential checking.
   (if (valid-credentials? username password)
       (session/put! :username username)))
 
 (defn add-user?
-  "Adds user to the database"
+  ^{:doc "Adds new user to the database"}
   [username password]
   ; TODO encrypt passwords
     (mgcol/insert "users" {:username username :password password})
     true)
 
 (defn add-post!
+  ^{:doc "Adds a new post to the database."}
   [title body]
   (mgcol/insert "posts" {:title title
                          :body body 
@@ -54,6 +59,7 @@
                          :timestamp (java.util.Date.)}))
 
 (defn get-pages
+  ^{:doc "Returns a blog listing depending on the pagination settings."}
   [page_num length]
   (mq/with-collection "posts"
                    (mq/find {})

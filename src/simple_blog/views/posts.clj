@@ -9,6 +9,14 @@
         [simple-blog.models.post]))
 
 ;==============================================================================
+; Globals
+;==============================================================================
+
+(def
+  ^{:doc "Number of blog posts to display per each page"}
+  PER_PAGE 10)
+
+;==============================================================================
 ; Form structures
 ;
 ;   User Login
@@ -19,21 +27,21 @@
 ; User Auth
 ;------------------------------------------------------------------------------
 
-(defpartial userLogin
-            [{:keys [username password]}]
+(defpartial userLogin [{:keys [username password]}]
+            ^{:doc "Structure for a user login form."}
             (label "username" "Username: ")
             (text-field "username" username)
             (label "password" "Password: ")
             (text-field "password" password))
 
-(defpartial userAdd
-            [{:keys [username password verify]}]
+(defpartial userAdd [{:keys [username password verify]}]
+            ^{:doc "Structure for an add user form."}
             (userLogin [username password])
             (label "verify" "Verify Password: ")
             (text-field "verify" password))
 
-(defpartial postAdd
-            [{:keys [title body]}]
+(defpartial postAdd [{:keys [title body]}]
+            ^{:doc "Structure for an add post form."}
             (label "title" "Title: ")
             (text-field "title" title)
             (label "body" "Body: ")
@@ -50,6 +58,7 @@
 
 (defpartial blogPost
             [object]
+            ^{:doc "User login page"}
             (html5
               [:p (object :title)]
               [:p (object :body)]
@@ -63,18 +72,21 @@
 ;------------------------------------------------------------------------------
 
 (defpartial userLoginForm
+            ^{:doc "Complete html user login form."}
             [user]
             (form-to [:post "/user/login"]
                      (userLogin user)
                      (submit-button "Login")))
 
 (defpartial userAddForm
+            ^{:doc "Complete html user add form."}
             [user]
             (form-to [:post "/user/new"]
                      (userAdd user)
                      (submit-button "Create account")))
 
 (defpartial postAddForm
+            ^{:doc "Complete html post add form."}
             [user]
             (form-to [:post "/post/new"]
                      (postAdd user)
@@ -88,14 +100,15 @@
 ; Success/failure messages
 ;
 ;   Generic notifications.
-;------------------------d------------------------------------------------------
+;------------------------------------------------------------------------------
 
 (defn paginated_view
+  ^{:doc "Paginated list of blog posts"}
   [page_num page_length]
   (map blogPost (get-pages page_num page_length)))
 
 (defn notify
-  "Gives the user a notification"
+  ^{:doc "Gives the user a notification."}
   [message]
   (html5
     [:p message]))
@@ -108,12 +121,15 @@
 ;------------------------------------------------------------------------------
 
 (defpage [:get "/user/login"] {:as user}
+         ^{:doc "User login page"}
          (userLoginForm user))
 
 (defpage [:get "/user/new"] {:as user}
+         ^{:doc "New user page"}
          (userAddForm user))
 
 (defpage [:get "/post/new"] {:as user}
+         ^{:doc "New post page"}
          (postAddForm user))
 
 ;------------------------------------------------------------------------------
@@ -123,12 +139,13 @@
 ;   Comments
 ;------------------------------------------------------------------------------
 
-(def PER_PAGE 10)
 
 (defpage [:get "/"] []
+         ^{:doc "Main page."}
          (paginated_view 1 PER_PAGE))
 
-(defpage [:get "/blog/:page_num"] {:keys [page_num]}
+(defpage [:get "/page/:page_num"] {:keys [page_num]}
+         ^{:doc "Blog post listing."}
          (paginated_view page_num PER_PAGE))
 
 ;==============================================================================
@@ -144,6 +161,7 @@
 
 (defpage [:post "/user/login"] {:keys [username password]}
          (if (valid-credentials? username password)
+         ^{:doc "Logs the user in."}
            (do
             (login! username password)
             (notify "Login success."))
@@ -151,6 +169,7 @@
 
 (defpage [:post "/user/new"] {:keys [username password verify]}
          (if (and (= verify password)
+         ^{:doc "Adds a new user."}
                   (user-available? username))
            (do
             (add-user? username password)
@@ -158,6 +177,7 @@
           (notify "Failed to create a new user.")))
 
 (defpage [:post "/post/new"] {:keys [title body]}
+         ^{:doc "Adds a new post."}
          (do
           (add-post! title body)
            (notify "New post created successfully.")))
