@@ -2,25 +2,37 @@
     (:refer-clojure :exclude [sort find])
     (:use [monger.collection :only [find-maps insert update] :as mgcol]
           [monger.query :only [with-collection find fields paginate] :as mq]
-          [clojure.string :only [lower-case trim join] :as cljstr])
+          [clojure.string :only [lower-case trim join replace] :as cljstr])
     (:require [noir.session :as session]))
 
 (def
   ^{:doc "Current domain."}
    PAGE_ROOT "http://127.0.0.1")
 
+(defn date 
+  [datetime]
+  ^{:doc "Takes a java.util.Date. object and returns a more Clojuric data
+         structure."}
+  (zipmap [:year :month :day :hour :minute :second]
+          ; Maps the format of a Java date time object over a list of strings
+          ; that represent Java date and time patterns.
+          (map (fn
+                 [indicator]
+                 (.format (java.text.SimpleDateFormat. indicator) datetime))
+               ["y" "M" "d" "H" "m" "s"])))
+
 (defn now []
   ^{:doc "Current time."}
-  (java.util.Date.))
+  (date (java.util.Date.)))
 
 (defn gen-slug
   [title]
   ^{:doc "Generates seo-friendly slug."}
   (-> title
       ; Remove non-whitespace special characters.
-      (replace  #"[^a-zA-Z0-9\ ]+" "")
+      (cljstr/replace  #"[^a-zA-Z0-9\ ]+" "")
       ; Replace whitespace with dashes.
-      (replace  #"\s+" "-")
+      (cljstr/replace  #"\s+" "-")
       ; Make all characters lowercase.
       (cljstr/lower-case)
       ; Trim anything that was missed.
@@ -75,35 +87,35 @@
 (defn add-post!
   [title body]
   ^{:doc "Adds a new post to the database."}
-  (def year (.format (java.text.SimpleDateFormat. "yyyy") (now)))
-  (def month (.format (java.text.SimpleDateFormat. "M") (now)))
-
-  (mgcol/insert "posts" {:title title
-                         :body body 
-                         :username (current-user)
-                         :timestamp (now)
-                         :year year
-                         :month month 
-                         :slug (gen-slug title)}))
+  (let [now (now)]
+    (mgcol/insert "posts" {:title title
+                           :body body 
+                           :username (current-user)
+                           :timestamp now
+                           :slug {:year (now :year)
+                                  :month (now :month)
+                                  :slug (gen-slug title)}})))
 
 (defn get-pages
   [page_num length]
   ^{:doc "Returns a blog listing."}
   (mq/with-collection "posts"
                    (mq/find {})
-                   (mq/fields [:title :body :username :timestamp])
+                   (mq/fields [:title :body :username :timestamp :slug])
                    (mq/paginate :page page_num :per-page length)))
 
 (defn get-post
   [year month slug]
   ^{:doc "Gets post from query items."}
-  (mgcol/find "posts" {:year year :month month :slug slug}))
-
+  (mgcol/find "posts" {:slug {:year year
+                              :month month
+                              :slug slug}}))
 
 (defn post-permalink
   [year month slug]
   ^{:doc "Generates permalink for current page."}
-  (cljstr/join "/" [PAGE_ROOT year month slug]))
+  (join "/" year month slug))
+
 
 (defn add-comment!
   [id title name email body]

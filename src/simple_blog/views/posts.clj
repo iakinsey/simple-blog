@@ -74,13 +74,11 @@
             [object]
             ^{:doc "Renders blog post."}
             (html5
-              (link-to (post-permalink (object :year)
-                                       (object :month)
-                                       (object :slug)))
-              [:p (object :title)]
+              [:p(object :title)]
               [:p (object :body)]
               [:p (object :username)]
               [:p (object :timestamp)]
+              [:p (str object)]
               [:br]))
 
 (defpartial render-comment
