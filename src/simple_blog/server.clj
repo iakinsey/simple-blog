@@ -11,6 +11,8 @@
         port (Integer. (get (System/getenv) "PORT" "8080"))]
     (server/start port {:mode mode
                         :ns 'simple-blog})
+
+    ;Connect to specified mongo database under DATABASE_NAME
     (if (do
           (connect!)
           (set-db! (get-db DATABASE_NAME)))

@@ -1,3 +1,7 @@
+;==============================================================================
+; Namespace and imports
+;==============================================================================
+
 (ns simple-blog.views.posts
   (:require [simple-blog.views.common :as common]
             [noir.session :as session])
@@ -19,16 +23,7 @@
 
 ;==============================================================================
 ; Form structures
-;
-;   User Login
-;   User Creation
 ;==============================================================================
-
-;------------------------------------------------------------------------------
-; User Auth
-;
-; (There could be a macro here at some point.)
-;------------------------------------------------------------------------------
 
 (defpartial userLogin [{:keys [username password]}]
             ^{:doc "Structure for a user login form."}
@@ -67,14 +62,17 @@
 ;==============================================================================
 
 ;------------------------------------------------------------------------------
-; Blog posts
+; Pages
 ;------------------------------------------------------------------------------
 
 (defpartial render-post
             [object]
             ^{:doc "Renders blog post."}
             (html5
-              [:p(object :title)]
+              [:p ((object :slug) :year)
+                  ((object :slug) :month)
+                  ((object :slug) :slug)]
+              [:p (object :title)]
               [:p (object :body)]
               [:p (object :username)]
               [:p (object :timestamp)]
@@ -96,8 +94,16 @@
             (map render-comment (object :comments)))
 
 ;------------------------------------------------------------------------------
-;   User Login
-;   User Creation
+; Listings
+;------------------------------------------------------------------------------
+
+(defn paginated_view
+  [page_num page_length]
+  ^{:doc "Paginated list of blog posts"}
+  (map render-post (get-pages page_num page_length)))
+
+;------------------------------------------------------------------------------
+; Forms
 ;------------------------------------------------------------------------------
 
 (defpartial userLoginForm
@@ -129,19 +135,12 @@
                      (submit-button "Add post")))
 
 ;==============================================================================
-;Pages
+; Pages
 ;==============================================================================
 
 ;------------------------------------------------------------------------------
-; Success/failure messages
-;
-;   Generic notifications.
+; Notifications (deprecate soon)
 ;------------------------------------------------------------------------------
-
-(defn paginated_view
-  [page_num page_length]
-  ^{:doc "Paginated list of blog posts"}
-  (map render-post (get-pages page_num page_length)))
 
 (defn notify
   [message]
@@ -150,10 +149,7 @@
     [:p message]))
 
 ;------------------------------------------------------------------------------
-; Interactive pages (forms)
-; 
-;   User Login
-;   User Creation
+; Forms
 ;------------------------------------------------------------------------------
 
 (defpage [:get "/user/login"] {:as user}
@@ -170,9 +166,6 @@
 
 ;------------------------------------------------------------------------------
 ; Listings
-;
-;   Blog Articles
-;   Comments
 ;------------------------------------------------------------------------------
 
 
@@ -192,16 +185,12 @@
                   (render-comments))
               post_object)))
          
-
 ;==============================================================================
 ; POST functions
 ;==============================================================================
 
 ;------------------------------------------------------------------------------
 ; Auth
-;
-;   User Login
-;   User Creation
 ;------------------------------------------------------------------------------
 
 (defpage [:post "/user/login"] {:keys [username password]}
@@ -222,11 +211,19 @@
             (notify "User created successfully."))
           (notify "Failed to create a new user.")))
 
+;------------------------------------------------------------------------------
+; Posts
+;------------------------------------------------------------------------------
+
 (defpage [:post "/post/new"] {:keys [title body]}
          ^{:doc "Adds a new post."}
          (do
           (add-post! title body)
           (notify "New post created successfully.")))
+
+;------------------------------------------------------------------------------
+; Comments
+;------------------------------------------------------------------------------
 
 (defpage [:post "/:year/:month/:slug/comment/add"]
          {:keys [id title name email body]}
