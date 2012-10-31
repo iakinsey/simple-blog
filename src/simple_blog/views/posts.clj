@@ -69,9 +69,9 @@
             [object]
             ^{:doc "Renders blog post."}
             (html5
-              [:p ((object :slug) :year)
-                  ((object :slug) :month)
-                  ((object :slug) :slug)]
+              [:p ((object :timestamp) :year)
+                  ((object :timestamp) :month)
+                  (object :slug)]
               [:p (object :title)]
               [:p (object :body)]
               [:p (object :username)]
@@ -89,9 +89,9 @@
               [:p (object :body)]))
 
 (defpartial render-comments
-            [object]
+            [parent]
             ^{:doc "Renders comments for blog post."}
-            (map render-comment (object :comments)))
+            (map render-comment (get-comments (parent :_id))))
 
 ;------------------------------------------------------------------------------
 ; Listings
@@ -128,10 +128,10 @@
                      (submit-button "Add post")))
 
 (defpartial commentAddForm 
-            [object id]
+            [object]
             ^{:doc "Complete new comment form."}
             (form-to [:post "/comment/new"]
-                     (commentAdd object)
+                     (commentAdd {:_id (object :_id) :title :name :field :body})
                      (submit-button "Add post")))
 
 ;==============================================================================
@@ -180,11 +180,10 @@
 (defpage [:get "/:year/:month/:slug"] {:keys [year month slug]}
          ^{:doc "Individual blog post"}
          (let [post_object (get-post year month slug)]
-           ((juxt (render-post)
-                  (commentAddForm)
-                  (render-comments))
-              post_object)))
-         
+           (html5
+              (render-post post_object)
+              (render-comments post_object))))
+
 ;==============================================================================
 ; POST functions
 ;==============================================================================
@@ -225,7 +224,7 @@
 ; Comments
 ;------------------------------------------------------------------------------
 
-(defpage [:post "/:year/:month/:slug/comment/add"]
+(defpage [:post "/comment/new"]
          {:keys [id title name email body]}
          (do
            (add-comment! id title name email body)

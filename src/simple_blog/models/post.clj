@@ -98,10 +98,13 @@
   ;(mgcol/find "posts" {:slug {:year year
   ;                            :month month
   ;                            :slug slug}}))
-  (mgcol/find "posts" {"slug.year" year 
-                       "slug.month" month 
-                       "slug.slug" slug}))
+  (first (mgcol/find-maps "posts" {"timestamp.year" year 
+                                   "timestamp.month" month 
+                                   "slug" slug})))
 
+(defn get-comments
+  [id]
+  (mgcol/find-maps "posts" {:_id id} [:comments]))
 
 ;==============================================================================
 ; Sessions
@@ -137,16 +140,14 @@
                            :body body 
                            :username (current-user)
                            :timestamp now
-                           :slug {:year (now :year)
-                                  :month (now :month)
-                                  :slug (gen-slug title)}})))
+                           :slug (gen-slug title)
+                           :comments []})))
 
 (defn add-comment!
   [id title name email body]
   ^{:doc "Adds comment to a post."}
-  (mgcol/update "posts" {:_id id} 
-                {:comments {:title title
-                            :name name
-                            :email email
-                            :body body
-                            :timestamp (now)}}))
+  (mgcol/update "posts" {:_id id} {"$push" {:comments {:title title
+                                                        :name name
+                                                        :email email
+                                                        :body body
+                                                        :timestamp (now)}}}))
