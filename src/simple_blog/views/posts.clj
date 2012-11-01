@@ -30,13 +30,13 @@
             (label "username" "Username: ")
             (text-field "username" username)
             (label "password" "Password: ")
-            (text-field "password" password))
+            (password-field "password" password))
 
 (defpartial userAdd [{:keys [username password verify]}]
             ^{:doc "Structure for an add user form."}
             (userLogin [username password])
             (label "verify" "Verify Password: ")
-            (text-field "verify" password))
+            (password-field "verify" password))
 
 (defpartial postAdd [{:keys [title body]}]
             ^{:doc "Structure for an add post form."}
@@ -45,17 +45,16 @@
             (label "body" "Body: ")
             (text-area "body" body))
 
-(defpartial commentAdd [{:keys [id title name email body]}]
+(defpartial commentAdd []
             ^{:doc "Structure for a newcomment form."}
             (label "title" "Title :")
-            (text-field "title" title)
+            (text-field "title")
             (label "name" "Name: ")
-            (text-field "name" name)
-            (label "email" "Email: ")
-            (text-field "email" email)
+            (text-field "name")
+            (email-field "email" "Email: ")
+            (text-field "email")
             (label "body" "Body: ")
-            (text-area "body" body)
-            (hidden-field "id" id))
+            (text-area "body"))
 
 ;==============================================================================
 ; Partials
@@ -127,11 +126,12 @@
                      (postAdd user)
                      (submit-button "Add post")))
 
-(defpartial commentAddForm 
-            [object]
+(defpartial commentAddForm
+            [id]
             ^{:doc "Complete new comment form."}
             (form-to [:post "/comment/new"]
-                     (commentAdd {:_id (object :_id) :title :name :field :body})
+                     (commentAdd)
+                     (hidden-field "id" id)
                      (submit-button "Add post")))
 
 ;==============================================================================
@@ -182,6 +182,7 @@
          (let [post_object (get-post year month slug)]
            (html5
               (render-post post_object)
+              (commentAddForm (post_object :_id))
               (render-comments post_object))))
 
 ;==============================================================================

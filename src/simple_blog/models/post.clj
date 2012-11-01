@@ -95,9 +95,6 @@
 (defn get-post
   [year month slug]
   ^{:doc "Gets post from query items."}
-  ;(mgcol/find "posts" {:slug {:year year
-  ;                            :month month
-  ;                            :slug slug}}))
   (first (mgcol/find-maps "posts" {"timestamp.year" year 
                                    "timestamp.month" month 
                                    "slug" slug})))
@@ -140,8 +137,7 @@
                            :body body 
                            :username (current-user)
                            :timestamp now
-                           :slug (gen-slug title)
-                           :comments []})))
+                           :slug (gen-slug title)})))
 
 (defn add-comment!
   [id title name email body]
